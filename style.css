@@ -1,0 +1,123 @@
+:root {
+    --tile-w: 110px; --tile-h: 150px;
+    --accent: #4a8c4d; --gold: #f1c40f;
+}
+
+body, html {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background-color: #050a05;
+    font-family: 'Segoe UI', sans-serif;
+    user-select: none; 
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+    background: url('bg.png') no-repeat center center fixed;
+    background-size: cover;
+}
+
+#stage {
+    width: 900px; 
+    height: 1600px; 
+    background: radial-gradient(circle, #2d5a32 0%, #0d1a0e 100%);
+    position: absolute;
+    top: 50%; left: 50%;
+    transform-origin: center;
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+    box-shadow: 0 0 100px rgba(0,0,0,0.8);
+    touch-action: none;
+}
+
+.overlay {
+    position: absolute; inset: 0; z-index: 5000; 
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: white; text-align: center;
+}
+
+#menu-screen { background: radial-gradient(circle, #2d5a32 0%, #0d1a0e 100%); }
+.modal-bg { background: rgba(0,0,0,0.95); }
+
+.big-btn { 
+    padding: 40px 100px; font-size: 60px; background: #e74c3c; color: white; 
+    border: 6px solid var(--gold); border-radius: 100px; cursor: pointer; font-weight: bold;
+}
+
+#header { height: 220px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 10; }
+#rank-txt { font-size: 42px; color: var(--gold); font-weight: bold; margin-bottom: 10px; }
+#top-row { width: 100%; display: flex; justify-content: space-between; padding: 0 80px; box-sizing: border-box; font-size: 60px; font-weight: 900; }
+
+#play-area { position: absolute; inset: 0; z-index: 5; }
+
+.tutorial-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    text-align: center;
+    font-size: 55px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 5px 20px rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.3);
+    padding: 40px;
+    border-radius: 30px;
+    border: 3px dashed var(--gold);
+    z-index: 3000;
+    pointer-events: none;
+    animation: pulseTut 1.5s infinite;
+}
+
+@keyframes pulseTut {
+    0%, 100% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+}
+
+#tray-ui {
+    position: absolute; 
+    bottom: 240px; 
+    left: 20px; width: 860px; height: 180px;
+    background: rgba(0,0,0,0.6); border: 6px solid var(--accent); border-radius: 35px;
+    display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; z-index: 100;
+}
+.slot { width: 102px; height: 150px; margin: 0 2px; background: rgba(255,255,255,0.05); border-radius: 15px; }
+
+#controls {
+    position: absolute; 
+    bottom: 40px; 
+    left: 0; width: 100%;
+    display: flex; justify-content: center; gap: 25px; z-index: 110;
+}
+.btn {
+    width: 150px; height: 150px; background: #1a3a1d; border: 4px solid var(--accent); border-radius: 40px;
+    display: flex; align-items: center; justify-content: center; font-size: 70px; color: white; cursor: pointer; position: relative;
+}
+.btn .badge { 
+    position: absolute; top: -15px; right: -15px; background: #e74c3c; width: 50px; height: 50px; 
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+    font-size: 28px; border: 3px solid white; font-weight: bold;
+}
+
+.tile {
+    position: absolute; width: var(--tile-w); height: var(--tile-h); background: #fff;
+    border-radius: 16px; box-shadow: 0 12px 0 #bdc3c7, 0 15px 30px rgba(0,0,0,0.5);
+    display: flex; justify-content: center; align-items: center; font-size: 90px; cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); z-index: 50; border: 1px solid #ddd;
+}
+.tile.locked { filter: brightness(0.4) contrast(0.8); }
+.hint-on { animation: hintAnim 0.7s infinite !important; border: 4px solid gold !important; }
+@keyframes hintAnim { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); box-shadow: 0 0 50px gold; z-index: 1000; } }
+
+#achievements-screen { background: rgba(10, 30, 10, 0.98); padding-top: 150px; justify-content: flex-start; }
+.gift-grid {
+    width: 800px; height: 1100px; display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 30px; overflow-y: auto; padding: 20px; scrollbar-width: none;
+}
+.gift-grid::-webkit-scrollbar { display: none; }
+.gift-card { background: transparent; border: none; padding: 20px; text-align: center; }
+.gift-card span { font-size: 110px; display: block; }
+.gift-card p { font-size: 30px; margin-top: 15px; color: var(--gold); font-weight: bold; }
+
+#gift-icon { font-size: 220px; margin: 40px 0; }
+#gift-name { font-size: 55px; color: #2ecc71; margin-bottom: 50px; font-weight: bold; }

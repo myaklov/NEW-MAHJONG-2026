@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Новый маджонг 2026</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- 1. Убран скрипт Яндекс Игр SDK -->
+    <!-- 2. Добавлен скрипт VK Bridge -->
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/vk-bridge.min.js"></script>
+</head>
+<body>
+
+<div id="stage">
+    <!-- Стартовый экран -->
+    <div id="menu-screen" class="overlay">
+        <h1 id="main-title" style="font-size: 110px; color: var(--gold); margin:0; line-height: 1.2;">НОВЫЙ МАДЖОНГ 2026</h1>
+        <p id="save-info" style="font-size: 50px; margin: 50px 0;">УРОВЕНЬ: 1</p>
+        <button id="play-btn" class="big-btn" onclick="startLevel()">ИГРАТЬ</button>
+    </div>
+
+    <!-- Экран паузы -->
+    <div id="pause-screen" class="overlay modal-bg" style="display:none">
+        <h1 id="pause-title" style="font-size: 130px; color: var(--gold);">ПАУЗА</h1>
+        <button id="resume-btn" class="big-btn" onclick="resumeGame()">ПРОДОЛЖИТЬ</button>
+    </div>
+
+    <!-- Окно достижений -->
+    <div id="achievements-screen" class="overlay modal-bg" style="display:none">
+        <h1 id="ach-title" style="font-size: 80px; color: var(--gold); margin-bottom: 20px;">ДОСТИЖЕНИЯ</h1>
+        <p id="ach-rank" style="font-size: 45px; margin-bottom: 50px;"></p>
+        <div class="gift-grid" id="gift-grid"></div>
+        <button id="ach-close-btn" class="big-btn" style="margin-top:50px" onclick="closeAch()">ЗАКРЫТЬ</button>
+    </div>
+
+    <!-- Окно получения бонуса (Reward) -->
+    <div id="reward-modal" class="overlay modal-bg" style="display:none">
+        <h1 id="reward-title" style="font-size: 70px; color: var(--gold); margin-bottom: 50px;">НУЖНЫ ПОДСКАЗКИ?</h1>
+        <div style="display: flex; flex-direction: column; gap: 40px;">
+            <button id="reward-ad-btn" class="big-btn" onclick="watchRewardAd()">
+                <span id="reward-btn-text">ПОЛУЧИТЬ +3</span> <span style="font-size: 50px;">📺</span>
+            </button>
+            <button id="reward-cancel-btn" class="big-btn" style="background: #7f8c8d; border-color: #bdc3c7;" onclick="closeRewardModal()">ОТМЕНА</button>
+        </div>
+    </div>
+
+    <!-- Подсказка первого уровня -->
+    <div id="tutorial-hint" class="tutorial-text" style="display:none"></div>
+
+    <!-- Верхняя панель -->
+    <div id="header">
+        <div id="rank-txt">УЧЕНИК</div>
+        <div id="top-row">
+            <div id="ui-lvl">УР. 1</div>
+            <div id="ui-score">0</div>
+        </div>
+    </div>
+
+    <div id="play-area"></div>
+
+    <!-- Нижняя панель -->
+    <div id="tray-ui">
+        <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+        <div class="slot"></div><div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    </div>
+
+    <!-- Кнопки управления -->
+    <div id="controls">
+        <div class="btn" onclick="shuffleBoard()">🔄<div class="badge" id="b-shuf">3</div></div>
+        <div class="btn" onclick="getHint()">💡<div class="badge" id="b-hint">3</div></div>
+        <div class="btn" onclick="openAch()">🏆</div>
+        <div class="btn" onclick="toggleAudio()"><span id="vol-ico">🔊</span></div>
+    </div>
+
+    <!-- Окна победы и проигрыша -->
+    <div id="win-screen" class="overlay modal-bg" style="display:none">
+        <h1 id="win-title-txt" style="font-size: 80px; color: var(--gold);">ПОБЕДА!</h1>
+        <div id="gift-icon">🎁</div>
+        <div id="gift-name">Награда</div>
+        <button id="next-lvl-btn" class="big-btn" onclick="handleLevelTransition('next')">ДАЛЕЕ</button>
+    </div>
+
+    <div id="lose-screen" class="overlay modal-bg" style="display:none">
+        <h1 id="lose-title" style="font-size: 100px;">ТУПИК</h1>
+        <button id="retry-btn" class="big-btn" onclick="handleLevelTransition('retry')">ЗАНОВО</button>
+    </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
