@@ -2,34 +2,39 @@ console.log('[Mahjong Log] game.js: Скрипт начал выполнятьс
 
 // Глобальные переменные
 const LANG = 'ru'; 
-let vkBridge = null; // Инициализируем как null, получим его позже
-let gameInitialized = false; // Флаг, чтобы избежать двойного запуска
+let vkBridge = null; // Будет определен позже
+let gameInitialized = false; 
 
-// --- НОВЫЙ БЛОК ИНИЦИАЛИЗАЦИИ ---
+// --- НОВЫЙ, БОЛЕЕ НАДЕЖНЫЙ БЛОК ИНИЦИАЛИЗАЦИИ ---
 
-// 1. Пытаемся подписаться на событие от VK Bridge
-document.addEventListener('vk-bridge:VKWebAppInit', () => {
-    console.log('[Mahjong Log] Получено событие: VKWebAppInit.');
-    
-    // Получаем объект Bridge и запускаем игру
-    vkBridge = window.vkBridge;
-    if (!gameInitialized) {
+const MAX_ATTEMPTS = 50; // Макс. попыток найти Bridge (50 * 100ms = 5 секунд)
+let attempts = 0;
+
+function waitForBridge() {
+    // Пытаемся получить объект vkBridge
+    if (window.vkBridge) {
+        console.log(`[Mahjong Log] VK Bridge найден после ${attempts + 1} попыток.`);
+        vkBridge = window.vkBridge;
+        // Отправляем сигнал инициализации и запускаем игру
+        vkBridge.send('VKWebAppInit');
         initializeGame();
+        return;
     }
-});
 
-// 2. Запасной вариант для локального тестирования (если событие не придет)
-window.onload = () => {
-    console.log('[Mahjong Log] Событие window.onload сработало.');
-    setTimeout(() => {
-        if (!gameInitialized) {
-            console.warn('[Mahjong Log] VKWebAppInit не пришло, запускаю игру в тестовом режиме.');
-            // Bridge все равно может быть уже доступен
-            vkBridge = window.vkBridge; 
-            initializeGame();
-        }
-    }, 1000); // Ждем 1 секунду
-};
+    // Если не нашли, пробуем еще раз через 100 мс
+    attempts++;
+    if (attempts < MAX_ATTEMPTS) {
+        setTimeout(waitForBridge, 100);
+    } else {
+        // Если после всех попыток Bridge не нашелся
+        console.error('[Mahjong Log] НЕ УДАЛОСЬ найти VK Bridge после ' + MAX_ATTEMPTS + ' попыток. Игра не может быть запущена корректно.');
+        // Можно показать пользователю сообщение об ошибке
+        document.body.innerHTML = `<div style="color: white; text-align: center; padding-top: 50px; font-family: sans-serif; font-size: 24px;">Ошибка загрузки приложения. Пожалуйста, попробуйте перезапустить.</div>`;
+    }
+}
+
+// Запускаем ожидание сразу после загрузки скрипта
+waitForBridge();
 
 // --- КОНЕЦ НОВОГО БЛОКА ---
 
@@ -42,21 +47,17 @@ function initializeGame() {
     console.log('[Mahjong Log] initializeGame: Функция запущена.');
     console.log('[Mahjong Log] initializeGame: VK Bridge объект:', vkBridge);
 
-    // Скрываем стартовый экран перед настройкой
     const menuScreen = document.getElementById('menu-screen');
     if (menuScreen) {
         menuScreen.style.visibility = 'hidden';
     }
 
-    // Защита от вызова контекстного меню и выделения
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('selectstart', e => e.preventDefault());
 
-    // Загрузка данных игрока и локализация интерфейса
     console.log('[Mahjong Log] initializeGame: Вызов load().');
     load(); 
 
-    // Адаптация размера игрового поля и установка обработчиков событий
     console.log('[Mahjong Log] initializeGame: Вызов autoScale() и настройка событий.');
     autoScale();
     window.addEventListener('resize', autoScale);
@@ -191,7 +192,6 @@ function load() {
     document.getElementById('vol-ico').innerText = state.mute ? '🔇' : '🔊';
     updateUI();
 
-    // После применения всех текстов делаем меню видимым
     const menuScreen = document.getElementById('menu-screen');
     if (menuScreen) {
         menuScreen.style.visibility = 'visible';
