@@ -1,47 +1,60 @@
+console.log('[Mahjong Log] game.js: Скрипт начал выполняться.');
+
 // Глобальные переменные
 const LANG = 'ru'; // Язык теперь всегда русский
 const vkBridge = window.vkBridge; // Для удобства работы с VK Bridge
 
+console.log('[Mahjong Log] game.js: VK Bridge объект:', vkBridge);
+
 // Точка входа: весь код игры запускается после загрузки окна
 window.onload = () => {
+    console.log('[Mahjong Log] window.onload: Событие сработало.');
+
     // Инициализация VK Mini App
     if (vkBridge) {
         vkBridge.send('VKWebAppInit');
-        console.log('VK Bridge initialized');
+        console.log('[Mahjong Log] window.onload: VK Bridge найден, VKWebAppInit отправлен.');
     } else {
-        console.error('VK Bridge is not available. Running in test mode.');
+        console.error('[Mahjong Log] window.onload: VK Bridge НЕ НАЙДЕН. Игра будет работать в тестовом режиме.');
     }
 
     // Скрываем основной экран, чтобы избежать показа не до конца загруженных данных (например, уровня)
     const menuScreen = document.getElementById('menu-screen');
     if (menuScreen) {
         menuScreen.style.visibility = 'hidden';
+        console.log('[Mahjong Log] window.onload: Стартовый экран скрыт для инициализации.');
     }
     
     // Сразу запускаем основную логику игры
+    console.log('[Mahjong Log] window.onload: Вызов initializeGame().');
     initializeGame();
 };
 
 // Функция инициализации всех основных компонентов игры
 function initializeGame() {
+    console.log('[Mahjong Log] initializeGame: Функция запущена.');
     // Защита от вызова контекстного меню и выделения
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('selectstart', e => e.preventDefault());
 
     // Загрузка данных игрока и локализация интерфейса (это применит язык и покажет меню)
+    console.log('[Mahjong Log] initializeGame: Вызов load().');
     load(); 
 
     // Адаптация размера игрового поля и установка обработчиков событий
+    console.log('[Mahjong Log] initializeGame: Вызов autoScale() и установка обработчиков событий.');
     autoScale();
     window.addEventListener('resize', autoScale);
     window.addEventListener('orientationchange', () => setTimeout(autoScale, 200));
     window.addEventListener('blur', () => { 
+        console.log('[Mahjong Log] Событие: blur (окно неактивно).');
         if(document.getElementById('menu-screen').style.display === 'none' && !state.isPaused) {
             togglePause(true); 
         }
     });
 
     disableScroll();
+    console.log('[Mahjong Log] initializeGame: Инициализация завершена.');
 }
 
 const UI_STRINGS = {
@@ -130,14 +143,19 @@ const SKEY = 'mahjong_2026_fixed_final_v7';
 function save() {
     const d = { l: state.lvl, s: state.score, sh: state.shuf, hi: state.hint, g: state.myGifts, m: state.mute };
     localStorage.setItem(SKEY, JSON.stringify(d));
+    console.log('[Mahjong Log] save: Состояние игры сохранено в localStorage.', d);
 }
 
 function load() {
-    const d = JSON.parse(localStorage.getItem(SKEY) || '{"l":1,"s":0,"sh":3,"hi":3,"g":[],"m":false}');
+    console.log('[Mahjong Log] load: Загрузка состояния игры из localStorage.');
+    const rawData = localStorage.getItem(SKEY);
+    const d = JSON.parse(rawData || '{"l":1,"s":0,"sh":3,"hi":3,"g":[],"m":false}');
+    console.log('[Mahjong Log] load: Загруженные данные:', d);
     state.lvl = d.l; state.score = d.s; state.shuf = d.sh; state.hint = d.hi; state.myGifts = d.g;
     state.mute = d.m || false;
     
     if (state.myGifts.length > 0 && typeof state.myGifts[0] === 'object') {
+        console.log('[Mahjong Log] load: Обнаружен старый формат подарков, конвертирую...');
         const ruGifts = GIFTS_DB.ru;
         state.myGifts = state.myGifts.map(oldGift => 
             ruGifts.findIndex(g => g.i === oldGift.i)
@@ -161,11 +179,13 @@ function load() {
     
     document.getElementById('vol-ico').innerText = state.mute ? '🔇' : '🔊';
     updateUI();
+    console.log('[Mahjong Log] load: Тексты интерфейса обновлены.');
 
     // После применения всех текстов делаем меню видимым
     const menuScreen = document.getElementById('menu-screen');
     if (menuScreen) {
         menuScreen.style.visibility = 'visible';
+        console.log('[Mahjong Log] load: Стартовый экран сделан видимым.');
     }
 }
 
@@ -175,6 +195,7 @@ function autoScale() {
     const wh = window.innerHeight;
     const scale = Math.min(ww / 900, wh / 1600);
     stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    // console.log(`[Mahjong Log] autoScale: Масштаб установлен в ${scale}`); // Раскомментируйте для отладки размера
 }
 
 function playSfx(type) {
@@ -197,6 +218,7 @@ function playSfx(type) {
 }
 
 function startLevel() {
+    console.log(`[Mahjong Log] startLevel: Старт уровня ${state.lvl}.`);
     document.querySelectorAll('.overlay').forEach(o => {
         if (o.id !== 'pause-screen') o.style.display = 'none';
     });
@@ -209,6 +231,7 @@ function startLevel() {
     document.getElementById('rank-txt').innerText = ranks[Math.min(rIdx, ranks.length-1)];
     
     if (state.lvl === 1) {
+        console.log('[Mahjong Log] startLevel: Первый уровень, показываю подсказку.');
         const tut = document.getElementById('tutorial-hint');
         tut.innerText = s.tutorial;
         tut.style.display = 'block';
@@ -227,7 +250,11 @@ function startLevel() {
 }
 
 function handleLevelTransition(action) {
-    if (isAdLock) return;
+    console.log(`[Mahjong Log] handleLevelTransition: Запущено с действием "${action}".`);
+    if (isAdLock) {
+        console.warn('[Mahjong Log] handleLevelTransition: Заблокировано, так как реклама уже в процессе.');
+        return;
+    }
     isAdLock = true;
 
     document.getElementById('win-screen').style.display = 'none';
@@ -236,37 +263,36 @@ function handleLevelTransition(action) {
     let hasProceeded = false;
     const proceed = () => {
         if (hasProceeded) return;
+        console.log('[Mahjong Log] handleLevelTransition: Выполняю proceed().');
         hasProceeded = true;
         isAdLock = false;
         if (action === 'next') state.lvl++;
         startLevel();
     };
 
-    // Проверяем, доступен ли VK Bridge, чтобы игра не ломалась при локальном тестировании
     if (!vkBridge || !vkBridge.supports('VKWebAppShowNativeAds')) {
-        console.log('VK Bridge or ads not supported, skipping ad.');
+        console.warn('[Mahjong Log] handleLevelTransition: VK Bridge или реклама не поддерживаются, пропускаю показ.');
         resumeGame();
         proceed();
         return;
     }
 
-    // ИСПОЛЬЗУЕМ VK BRIDGE ДЛЯ МЕЖСТРАНИЧНОЙ РЕКЛАМЫ
+    console.log('[Mahjong Log] handleLevelTransition: Запрос на показ межстраничной рекламы.');
     vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' })
         .then(data => {
-            console.log('Interstitial Ad result:', data);
+            console.log('[Mahjong Log] handleLevelTransition: Результат показа рекламы:', data);
             resumeGame();
             proceed();
         })
         .catch(error => {
-            console.error('Interstitial Ad error. Proceeding anyway.', error);
-            // Продолжаем игру даже в случае ошибки
+            console.error('[Mahjong Log] handleLevelTransition: Ошибка показа рекламы. Все равно продолжаем.', error);
             resumeGame();
             proceed();
         });
 }
 
-
 function buildBoard() {
+    console.log('[Mahjong Log] buildBoard: Создание игрового поля.');
     const area = document.getElementById('play-area'); area.innerHTML = '';
     state.tray = []; state.tiles = [];
     let trips = (state.lvl === 1) ? 4 : (10 + Math.floor(state.lvl * 1.5));
@@ -286,6 +312,7 @@ function buildBoard() {
         area.appendChild(el); state.tiles.push(obj);
     });
     updateLocks();
+    console.log(`[Mahjong Log] buildBoard: Поле создано с ${state.tiles.length} плитками.`);
 }
 
 function updateLocks() {
@@ -299,10 +326,15 @@ function updateLocks() {
         }
         t1.locked = lock; t1.el.classList.toggle('locked', lock);
     });
+    // console.log('[Mahjong Log] updateLocks: Блокировки плиток обновлены.'); // Может быть слишком частым
 }
 
 function onSelect(tile) {
-    if (tile.locked || state.tray.length >= 8 || state.isPaused) return;
+    if (tile.locked || state.tray.length >= 8 || state.isPaused) {
+        console.warn(`[Mahjong Log] onSelect: Выбор плитки заблокирован. locked: ${tile.locked}, tray full: ${state.tray.length >= 8}, paused: ${state.isPaused}`);
+        return;
+    }
+    console.log(`[Mahjong Log] onSelect: Выбрана плитка "${tile.sym}".`);
     playSfx('tap');
     
     state.tiles.forEach(t => t.el.classList.remove('hint-on'));
@@ -310,11 +342,13 @@ function onSelect(tile) {
     tile.dead = true;
     state.tray.push(tile);
     state.tray.sort((a,b) => a.sym.localeCompare(b.sym));
-    renderTray(); updateLocks();
+    renderTray(); 
+    updateLocks();
     setTimeout(checkMatches, 400);
 }
 
 function renderTray() {
+    // console.log('[Mahjong Log] renderTray: Обновление позиций плиток в лотке.'); // Может быть слишком частым
     const trayBox = document.getElementById('tray-ui');
     state.tray.forEach((t, i) => {
         if (i < trayBox.children.length) {
@@ -328,10 +362,12 @@ function renderTray() {
 }
 
 function checkMatches() {
+    // console.log('[Mahjong Log] checkMatches: Проверка совпадений.'); // Может быть слишком частым
     const counts = {};
     state.tray.forEach(t => counts[t.sym] = (counts[t.sym] || 0) + 1);
     for(let s in counts) {
         if(counts[s] >= 3) {
+            console.log(`[Mahjong Log] checkMatches: Найдено 3 плитки "${s}".`);
             playSfx('match');
             let removedCount = 0;
             const toRemove = [];
@@ -360,10 +396,14 @@ function checkMatches() {
             return;
         }
     }
-    if(state.tray.length >= 8) document.getElementById('lose-screen').style.display = 'flex';
+    if(state.tray.length >= 8) {
+        console.log('[Mahjong Log] checkMatches: Лоток полон. Поражение.');
+        document.getElementById('lose-screen').style.display = 'flex';
+    }
 }
 
 function showWin() {
+    console.log('[Mahjong Log] showWin: Уровень пройден, показ экрана победы.');
     const s = UI_STRINGS[LANG];
     const winS = document.getElementById('win-screen');
     const giftIcon = document.getElementById('gift-icon');
@@ -397,6 +437,7 @@ function showWin() {
 function openRewardModal(type) {
     if (state.isPaused) return;
     activeRewardType = type;
+    console.log(`[Mahjong Log] openRewardModal: Открытие окна бонуса типа "${type}".`);
     const s = UI_STRINGS[LANG];
     document.getElementById('reward-title').innerText = (type === 'hint') ? s.rewardHintTitle : s.rewardShufTitle;
     document.getElementById('reward-modal').style.display = 'flex';
@@ -404,55 +445,59 @@ function openRewardModal(type) {
 }
 
 function closeRewardModal() {
+    console.log('[Mahjong Log] closeRewardModal: Закрытие окна бонуса.');
     document.getElementById('reward-modal').style.display = 'none';
     activeRewardType = null;
     togglePause(false);
 }
 
 function watchRewardAd() {
-    if (isAdLock) return;
+    if (isAdLock) {
+        console.warn('[Mahjong Log] watchRewardAd: Заблокировано, реклама уже в процессе.');
+        return;
+    }
     isAdLock = true;
+    console.log('[Mahjong Log] watchRewardAd: Запрос на показ рекламы с вознаграждением.');
 
-    // Проверяем, доступен ли VK Bridge, чтобы игра не ломалась при локальном тестировании
     if (!vkBridge || !vkBridge.supports('VKWebAppShowNativeAds')) {
-        console.log('VK Bridge or ads not supported, skipping reward ad.');
+        console.warn('[Mahjong Log] watchRewardAd: VK Bridge или реклама не поддерживаются, пропускаю.');
         isAdLock = false;
         closeRewardModal();
         return;
     }
-
-    // ИСПОЛЬЗУЕМ VK BRIDGE ДЛЯ РЕКЛАМЫ С ВОЗНАГРАЖДЕНИЕМ
+    
     vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
         .then(data => {
-            console.log('Rewarded Ad result:', data);
-            if (data.result === true) { // Явная проверка на true, если пользователь досмотрел рекламу
-                console.log('User was rewarded!');
+            console.log('[Mahjong Log] watchRewardAd: Результат показа:', data);
+            if (data.result === true) {
+                console.log('[Mahjong Log] watchRewardAd: Пользователь получил вознаграждение!');
                 if (activeRewardType === 'hint') state.hint += 3;
                 if (activeRewardType === 'shuf') state.shuf += 3;
                 save();
                 updateUI();
             } else {
-                console.log('User did not watch the ad to completion.');
+                console.log('[Mahjong Log] watchRewardAd: Пользователь не досмотрел рекламу.');
             }
         })
         .catch(error => {
-            console.error('Rewarded Ad error:', error);
-            // Ошибки могут быть, если рекламы нет, или пользователь закрыл окно выбора
+            console.error('[Mahjong Log] watchRewardAd: Ошибка показа рекламы.', error);
         })
         .finally(() => {
-            // Этот блок выполнится в любом случае: и при успехе, и при ошибке
+            console.log('[Mahjong Log] watchRewardAd: Блок finally выполнен.');
             isAdLock = false;
-            closeRewardModal(); // Закрываем модальное окно и снимаем паузу
+            closeRewardModal();
         });
 }
 
 function shuffleBoard() {
     if(state.shuf <= 0) {
+        console.log('[Mahjong Log] shuffleBoard: Нет перемешиваний, открываю окно бонуса.');
         openRewardModal('shuf');
         return;
     }
     if(state.isPaused) return;
     
+    console.log('[Mahjong Log] shuffleBoard: Перемешивание поля.');
     state.tiles.forEach(t => t.el.classList.remove('hint-on'));
     
     state.shuf--; 
@@ -461,17 +506,19 @@ function shuffleBoard() {
     state.tiles.filter(t => !t.dead).forEach(t => {
         t.x = 60 + Math.random() * 670; 
         t.y = 250 + Math.random() * 800;
-        t.el.style.left = t.x+'px'; t.el.style.top = t.y+'px';
+        t.el.style.left = t.x+'px'; el.style.top = t.y+'px';
     });
     updateLocks();
 }
 
 function getHint() {
     if(state.hint <= 0) {
+        console.log('[Mahjong Log] getHint: Нет подсказок, открываю окно бонуса.');
         openRewardModal('hint');
         return;
     }
     if(state.isPaused) return;
+    console.log('[Mahjong Log] getHint: Поиск и показ подсказки.');
     const acc = state.tiles.filter(t => !t.dead && !t.locked);
     if(acc.length === 0) return;
     
@@ -489,6 +536,7 @@ function getHint() {
     }
 
     if (targetSym) {
+        console.log(`[Mahjong Log] getHint: Подсказка для символа "${targetSym}".`);
         state.hint--; 
         updateUI(); 
         save(); 
@@ -501,16 +549,19 @@ function updateUI() {
     const bHint = document.getElementById('b-hint');
     bShuf.innerText = (state.shuf > 0) ? state.shuf : "+";
     bHint.innerText = (state.hint > 0) ? state.hint : "+";
+    // console.log('[Mahjong Log] updateUI: Обновление счетчиков бонусов.'); // Может быть слишком частым
 }
 
 function toggleAudio() {
     state.mute = !state.mute;
     document.getElementById('vol-ico').innerText = state.mute ? '🔇' : '🔊';
+    console.log(`[Mahjong Log] toggleAudio: Звук ${state.mute ? 'выключен' : 'включен'}.`);
     save();
 }
 
 function openAch() {
     if (state.isPaused) return;
+    console.log('[Mahjong Log] openAch: Открытие экрана достижений.');
     const s = UI_STRINGS[LANG];
     const grid = document.getElementById('gift-grid');
     grid.innerHTML = '';
@@ -530,7 +581,9 @@ function openAch() {
     document.getElementById('achievements-screen').style.display = 'flex';
     togglePause(true);
 }
+
 function closeAch() { 
+    console.log('[Mahjong Log] closeAch: Закрытие экрана достижений.');
     document.getElementById('achievements-screen').style.display = 'none';
     togglePause(false);
 }
@@ -538,16 +591,19 @@ function closeAch() {
 function togglePause(val) { 
     if (val === state.isPaused) return;
     state.isPaused = val; 
+    console.log(`[Mahjong Log] togglePause: Пауза ${val ? 'включена' : 'выключена'}.`);
     document.getElementById('pause-screen').style.display = val ? 'flex' : 'none'; 
 }
 
 function resumeGame() { 
     if (document.getElementById('reward-modal').style.display === 'none' && document.getElementById('achievements-screen').style.display === 'none') {
+        console.log('[Mahjong Log] resumeGame: Снятие паузы.');
         togglePause(false); 
     }
 }
 
 function disableScroll() {
+    console.log('[Mahjong Log] disableScroll: Отключение скролла на странице.');
     document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
     document.addEventListener('wheel', e => e.preventDefault(), { passive: false });
 }
